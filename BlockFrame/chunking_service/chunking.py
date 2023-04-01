@@ -8,8 +8,7 @@ import pathlib
 class ChunkHandler:
     def __init__(self, *args, **kwargs) -> None:
         self.config = kwargs.get("config")
-        print(self.config)
-        self.path = self.config['file-storage-path']
+        self.path = self.config["file-storage-path"]
 
     def target(self, file_name, size, files: list = None):
         self.file_name = file_name
@@ -25,14 +24,13 @@ class ChunkHandler:
             return (
                 pathlib.Path(self.config.get("file-storage-path"))
                 if pathlib.Path(self.config.get("file-storage-path"))
-                   is pathlib.Path(self.config.get("file-storage-path")).exists
+                is pathlib.Path(self.config.get("file-storage-path")).exists
                 else pathlib.Path(self.config.get("file-storage-path")).mkdir()
             )
         except FileExistsError as f:
             return pathlib.Path(self.config.get("file-storage-path"))
 
     def chunks(self):
-
         _size = os.stat(self.file_name).st_size // self.size
         with open(self.file_name, "rb") as f:
             while content := f.read(_size):
@@ -46,8 +44,8 @@ class ChunkHandler:
             _file_chunk_uid = uuid.uuid4()
 
             with open(
-                    f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk",
-                    "wb+"
+                f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk",
+                "wb+",
             ) as f:
                 _hash.update(f.read())
                 count += 1
@@ -72,7 +70,9 @@ class ChunkHandler:
         """
         It writes the file's information to a file with the same name as the file's primary UUID.
         """
-        with open(f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}.ccif", "wb+") as ccif:
+        with open(
+            f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}.ccif", "wb+"
+        ) as ccif:
             ccif.write(bytes(str(self.primary_uuid), "utf-8"))
             ccif.write(bytes("\n", "utf-8"))
 

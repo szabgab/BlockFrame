@@ -1,9 +1,9 @@
 import hashlib
 import os
 import uuid
-from lib.chunking_service.config import Config
-from lib.chunking_service.chunking import ChunkHandler
-from lib.database_service.database import BlockFrameDatabase
+from BlockFrame.chunking_service.config import Config
+from BlockFrame.chunking_service.chunking import ChunkHandler
+from BlockFrame.database_service.database import BlockFrameDatabase
 import sys
 
 
@@ -42,7 +42,7 @@ class Chunker:
             _hash = hashlib.sha256()
             _file_chunk_uid = uuid.uuid4()
             with open(
-                    f"{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk", "wb+"
+                f"{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk", "wb+"
             ) as f:
                 _hash.update(f.read())
                 count += 1

@@ -1,4 +1,4 @@
-from lib import block_frame
+from BlockFrame import block_frame
 import pathlib
 
 config_path = pathlib.Path("./config.json").absolute()

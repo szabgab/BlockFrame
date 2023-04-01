@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import Relationship
 
-from lib.database_service.initalisation import DatabaseInterface
+from BlockFrame.database_service.initalisation import DatabaseInterface
 
 
 class DefaultChunkModel(DatabaseInterface().Base):

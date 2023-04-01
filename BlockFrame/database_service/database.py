@@ -1,6 +1,6 @@
-from lib.database_service.defaultmodel import DefaultChunkModel
-from lib.database_service.getters import BlockFrameDatabaseGetters
-from lib.database_service.initalisation import *
+from BlockFrame.database_service.defaultmodel import DefaultChunkModel
+from BlockFrame.database_service.getters import BlockFrameDatabaseGetters
+from BlockFrame.database_service.initalisation import *
 
 
 class BlockFrameDatabase(BlockFrameDatabaseGetters, BlockFrameDatabaseInit):
