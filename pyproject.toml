@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "file-chunker"
+version = "0.1.0"
+description = "Chunky is a file chunker that works alongside your applications.  not meant for light usage."
+authors = ["wizock <silent.death3500@gmail.com>"]
+license = "apache 2.0"
+readme = "README.md"
+packages = [{include = "file_chunker"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+cryptography = "^39.0.2"
+SQLAlchemy = "^2.0.7"
+concurrent-tasks = "^1.4.1"
+asyncio = "^3.4.3"
+hashlib = "^20081119"
+pathlib = "^1.0.1"
+multiprocessing = "^2.6.2.1"
+enum = "^0.4.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
