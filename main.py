@@ -8,5 +8,8 @@ block_frame = block_frame.BlockFrame(config_path)
 _chunker = block_frame.chunker
 _chunker_db = block_frame.database
 _chunker_db.create_table(DefaultChunkModel)
+
+data = _chunker_db.get_all()
+
 _chunker.target(file_name="random.txt", size=5)
 # _chunker.generic_chunking()
