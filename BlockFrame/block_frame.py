@@ -1,94 +1,15 @@
 import hashlib
 import os
-import uuid
 from BlockFrame.chunking_service.config import Config
 from BlockFrame.chunking_service.chunking import ChunkHandler
 from BlockFrame.database_service.database import BlockFrameDatabase
-import sys
 
 
 class BlockFrame:
     def __init__(self, config: str):
         self.config = Config(config)
-        self.database = BlockFrameDatabase()
-        self.chunker = ChunkHandler(self.database, config=self.config.config_id)
-
-
-class Chunker:
-    def __init__(self, file_name, size) -> None:
-        self.file_name = file_name
-        self.size = size
-        self.primary_uuid = uuid.uuid4()
-        self.original_file_hash = ""
-        self.chunk_file_hashes = []
-        self.chunk_file_uid = []
-
-    def chunks(self):
-        """
-        It reads the file in chunks of size `_size` and yields the content of each chunk
-        """
-        _size = os.stat(self.file_name).st_size // self.size
-        with open(self.file_name, "rb") as f:
-            while content := f.read(_size):
-                yield content
-
-    def produce_chunks(self):
-        """
-        It takes a file, splits it into chunks, and writes each chunk to a file
-        """
-        split_files = self.chunks()
-        count = 0
-        for chunk in split_files:
-            _hash = hashlib.sha256()
-            _file_chunk_uid = uuid.uuid4()
-            with open(
-                f"{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk", "wb+"
-            ) as f:
-                _hash.update(f.read())
-                count += 1
-                f.write(bytes(chunk))
-            self.chunk_file_uid.append(_file_chunk_uid)
-            self.chunk_file_hashes.append(_hash.hexdigest())
-
-    def hasher(self):
-        """
-        It takes a file and hashes it.
-        """
-        _hash = hashlib.sha256()
-        with open(self.file_name, "rb") as file:
-            chunk = 0
-            while chunk != b"":
-                chunk = file.read(1024)
-                _hash.update(chunk)
-
-        self.original_file_hash = _hash.hexdigest()
-
-    def write_ccif(self):
-        """
-        It writes the file's information to a file with the same name as the file's primary UUID.
-        """
-        with open(f"{self.primary_uuid}.ccif", "wb+") as ccif:
-            ccif.write(bytes(str(self.primary_uuid), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.file_name), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.size), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.original_file_hash), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.chunk_file_hashes), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.chunk_file_uid), "utf-8"))
-
-    def generic_run(self):
-        self.produce_chunks()
-        self.hasher()
-        self.write_ccif()
+        self.database = BlockFrameDatabase(db_config=self.config)
+        self.chunker = ChunkHandler(db=self.database, config=self.config.config_id)
 
 
 class Reconstruct:
@@ -102,13 +23,6 @@ class Reconstruct:
         self.primary_uuid = ""
 
     def parser(self, data):
-        """
-        It takes a string of the form `"[UUID(a), UUID(b), UUID(c)]"` and returns a list of the form
-        `["a", "b", "c"]`
-
-        :param data: The data to be parsed
-        :return: A list of strings.
-        """
         return [
             elem.strip("' ")
             for elem in data.strip("[]\n")
@@ -118,9 +32,6 @@ class Reconstruct:
         ]
 
     def parse_ccif_file(self):
-        """
-        It reads a file and then parses the data into a list
-        """
         with open(self.ccif_file, "rb") as ccif:
             self.primary_uuid: str = ccif.readline().decode("utf-8")
 
@@ -139,12 +50,6 @@ class Reconstruct:
         self.original_file_hash = self.original_file_hash.strip("\n")
 
     def chunk_files(self) -> list:
-        """
-        It returns a list of files in the current directory that contain the string "_chunk_" and the
-        first character of the primary_uuid attribute of the object
-        :return: A list of files that are sorted by the chunk number.
-        """
-
         return sorted(
             [
                 file

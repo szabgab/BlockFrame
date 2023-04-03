@@ -6,37 +6,34 @@ from sqlalchemy.orm import sessionmaker
 
 class DatabaseInterface:
     Base = declarative_base()
-    db_engine = create_engine("sqlite:///blockframe_db.db")
-    async_session = sessionmaker(db_engine, class_=sessionmaker, expire_on_commit=False)
+    db_engine = create_engine("sqlite:///block_frame.db")
+    sync_session = sessionmaker(db_engine, class_=sessionmaker, expire_on_commit=False)
 
-    def custom_uri(uri: str):
-        async_engine = create_engine(uri)
+    def custom_uri(self: str):
+        async_engine = create_engine(self)
 
 
 class BlockFrameDatabaseInit(DatabaseInterface):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
-        self.class_model = kwargs.get("class_model")
-        if self.class_model is not None:
-            self.db_model = self.class_model
-        else:
-            from defaultmodel import DefaultChunkModel
-            self.db_model = DefaultChunkModel()
-        self.initalise()
 
-    def initalise(self):
-        for db in self.get_db():
-            self.create_table(self.db_model)
-            with db.begin():
-                self.create_table(self.db_model)
-                db.commit()
+        self.class_model = kwargs.get("class_model")
+        self.config = kwargs.get("config")["uri"]
+        self.custom_uri(self.config)
+        if self.class_model is None:
+            from defaultmodel import DefaultChunkModel
+
+            self.db_model = DefaultChunkModel
+        else:
+            self.db_model = self.class_model
 
     def create_table(self, db_model):
-        with self.async_engine.begin() as conn:
-            conn.run_sync(db_model.metadata.create_all)
+        with self.db_engine.begin() as conn:
+            DatabaseInterface.sync_session(bind=conn)  # <-- change this line
+            db_model.metadata.create_all(conn)
 
     def get_db(self):
-        session = self.async_session()
+        session = self.sync_session()
         try:
             return session
         finally:
@@ -47,16 +44,3 @@ class BlockFrameModelInstance(DatabaseInterface):
     def __new__(cls):
         instance = super().__new__(cls)
         return instance.Base
-
-
-if __name__ == "__main__":
-    cdb = BlockFrameModelInstance()
-
-
-    class CustomBlockFrameModel(cdb):
-        __tablename__ = "BlockFrame_model"
-        id = Column(Integer(), primary_key=True)
-        data = Column(String())
-
-
-    chunk_db = BlockFrameDatabaseInit(CustomBlockFrameModel)

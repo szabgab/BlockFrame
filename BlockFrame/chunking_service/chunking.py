@@ -3,12 +3,14 @@ import os
 import uuid
 from typing import ByteString
 import pathlib
+from BlockFrame.database_service.database import BlockFrameDatabase
 
 
 class ChunkHandler:
     def __init__(self, *args, **kwargs) -> None:
         self.config = kwargs.get("config")
         self.path = self.config["file-storage-path"]
+        self.db = kwargs.get("db")
 
     def target(self, file_name, size, files: list = None):
         self.file_name = file_name
@@ -67,9 +69,7 @@ class ChunkHandler:
         self.original_file_hash = _hash.hexdigest()
 
     def write_ccif(self):
-        """
-        It writes the file's information to a file with the same name as the file's primary UUID.
-        """
+        self.db.session()
         with open(
             f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}.ccif", "wb+"
         ) as ccif:
