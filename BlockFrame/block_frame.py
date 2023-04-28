@@ -9,7 +9,7 @@ class BlockFrame:
     def __init__(self, config: str):
         self.config = Config(config)
         self.database = BlockFrameDatabase(db_config=self.config)
-        self.chunker = ChunkHandler(db=self.database, config=self.config.config_id)
+        self.chunker = ChunkHandler(db=self.database.get_db(), config=self.config.config_id)
 
 
 class Reconstruct:

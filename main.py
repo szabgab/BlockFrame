@@ -12,4 +12,4 @@ _chunker_db.create_table(DefaultChunkModel)
 data = _chunker_db.get_all()
 
 _chunker.target(file_name="random.txt", size=5)
-# _chunker.generic_chunking()
+_chunker.generic_chunking()

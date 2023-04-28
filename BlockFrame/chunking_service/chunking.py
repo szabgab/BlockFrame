@@ -1,9 +1,8 @@
 import hashlib
 import os
 import uuid
-from typing import ByteString
 import pathlib
-from BlockFrame.database_service.database import BlockFrameDatabase
+from ..database_service.defaultmodel import DefaultChunkModel, ChunkHashes
 
 
 class ChunkHandler:
@@ -26,10 +25,10 @@ class ChunkHandler:
             return (
                 pathlib.Path(self.config.get("file-storage-path"))
                 if pathlib.Path(self.config.get("file-storage-path"))
-                   is pathlib.Path(self.config.get("file-storage-path")).exists
+                is pathlib.Path(self.config.get("file-storage-path")).exists
                 else pathlib.Path(self.config.get("file-storage-path")).mkdir()
             )
-        except FileExistsError as f:
+        except FileExistsError:
             return pathlib.Path(self.config.get("file-storage-path"))
 
     def chunks(self):
@@ -46,8 +45,8 @@ class ChunkHandler:
             _file_chunk_uid = uuid.uuid4()
 
             with open(
-                    f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk",
-                    "wb+",
+                f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}_chunk_{_file_chunk_uid}_{count}.chunk",
+                "wb+",
             ) as f:
                 _hash.update(f.read())
                 count += 1
@@ -56,44 +55,37 @@ class ChunkHandler:
             self.chunk_file_hashes.append(_hash.hexdigest())
 
     def hasher(self):
-        """
-        It takes a file and hashes it.
-        """
         _hash = hashlib.sha256()
         with open(self.file_name, "rb") as file:
             chunk = 0
             while chunk != b"":
                 chunk = file.read(1024)
                 _hash.update(chunk)
-
         self.original_file_hash = _hash.hexdigest()
 
     def save_to_db(self):
-        self.db
-
-    def write_ccif(self):
-        self.db.session()
-        with open(
-                f"{pathlib.Path(self.path).absolute()}/{self.primary_uuid}.ccif", "wb+"
-        ) as ccif:
-            ccif.write(bytes(str(self.primary_uuid), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.file_name), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.size), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.original_file_hash), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.chunk_file_hashes), "utf-8"))
-            ccif.write(bytes("\n", "utf-8"))
-
-            ccif.write(bytes(str(self.chunk_file_uid), "utf-8"))
+        with self.db as session:
+            model = DefaultChunkModel(
+                file_uuid=str(self.primary_uuid),
+                file_name=self.file_name,
+                size=self.size,
+                original_file_hash=self.original_file_hash,
+                split_length=len(self.chunk_file_uid),
+                linking_id=str(self.primary_uuid),
+            )
+            for _hash, _uid in zip(self.chunk_file_hashes, self.chunk_file_uid):
+                model.hashes.append(
+                    ChunkHashes(
+                        chunk_hash=_hash,
+                        linking_id=str(self.primary_uuid),
+                        chunk_length=len(_hash),
+                        chunk_size=len(str(_uid)),
+                    )
+                )
+            session.add(model)
+            session.commit()
 
     def generic_chunking(self):
         self.produce_chunks()
         self.hasher()
-        self.write_ccif()
+        self.save_to_db()

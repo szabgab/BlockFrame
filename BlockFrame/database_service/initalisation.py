@@ -1,4 +1,3 @@
-from sqlalchemy import Column, Integer, String
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -7,10 +6,13 @@ from sqlalchemy.orm import sessionmaker
 class DatabaseInterface:
     Base = declarative_base()
     db_engine = create_engine("sqlite:///block_frame.db")
-    sync_session = sessionmaker(db_engine, class_=sessionmaker, expire_on_commit=False)
+    sync_session = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 
     def custom_uri(self: str):
-        async_engine = create_engine(self)
+        create_engine(self)
+
+    def return_engine(self):
+        return self.db_engine
 
 
 class BlockFrameDatabaseInit(DatabaseInterface):
@@ -30,11 +32,8 @@ class BlockFrameDatabaseInit(DatabaseInterface):
             db_model.metadata.create_all(conn)
 
     def get_db(self):
-        session = self.sync_session()
-        try:
-            return session
-        finally:
-            session.close_all()
+        # return an object which can be used to commit data to the database easily
+        return DatabaseInterface.sync_session()
 
 
 class BlockFrameModelInstance(DatabaseInterface):

@@ -1,5 +1,0 @@
-cryptography
-SQLAlchemy
-setuptools
-wheel
-aiosqlite

@@ -4,7 +4,7 @@ class BlockFrameDatabaseGetters:
         self.model = kwargs.get("class_model")
 
     def get_all(self):
-        with self.db() as session:
+        with self.db as session:
             result = session.query(self.model).all()
         return result
 
