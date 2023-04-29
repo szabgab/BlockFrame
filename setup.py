@@ -8,4 +8,5 @@ setup(
     description="File Chunking Library to work as a data-store solution alongside webapps and software.",
     packages=find_packages(),
     install_requires=["cryptography", "SQLAlchemy", "setuptools", "wheel", "aiosqlite"],
+    url="https://github.com/Wizock/BlockFrame/",
 )
